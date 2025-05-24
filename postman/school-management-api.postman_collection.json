@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
 		"name": "School Management API",
-		"description": "API collection for School Management System with location-based sorting",
+		"description": "API collection for School Management System with location-based sorting\n\n## Features\n- Add new schools with location data\n- List schools sorted by proximity\n- Input validation\n- Error handling\n\n## Base URL\n- Development: http://localhost:3000\n- Production: [Your Render.com URL]\n\n## Authentication\nNo authentication required for these endpoints.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -25,8 +25,41 @@
 					"host": ["{{baseUrl}}"],
 					"path": ["api", "addSchool"]
 				},
-				"description": "Add a new school to the database"
-			}
+				"description": "Add a new school to the database\n\n### Request Body\n- name: School name (required)\n- address: School address (required)\n- latitude: School's latitude (required, between -90 and 90)\n- longitude: School's longitude (required, between -180 and 180)\n\n### Success Response (200)\n```json\n{\n    \"success\": true,\n    \"message\": \"School added successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"Example School\",\n        \"address\": \"123 Education Street\",\n        \"latitude\": 12.9716,\n        \"longitude\": 77.5946\n    }\n}\n```\n\n### Error Response (400)\n```json\n{\n    \"success\": false,\n    \"message\": \"Validation failed\",\n    \"errors\": [\n        \"Name is required\",\n        \"Address is required\",\n        \"Latitude must be between -90 and 90\"\n    ]\n}\n```"
+			},
+			"response": [
+				{
+					"name": "Success Response",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Example School\",\n    \"address\": \"123 Education Street\",\n    \"latitude\": 12.9716,\n    \"longitude\": 77.5946\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/addSchool",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "addSchool"]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n    \"success\": true,\n    \"message\": \"School added successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"Example School\",\n        \"address\": \"123 Education Street\",\n        \"latitude\": 12.9716,\n        \"longitude\": 77.5946\n    }\n}"
+				}
+			]
 		},
 		{
 			"name": "List Schools",
@@ -40,23 +73,60 @@
 					"query": [
 						{
 							"key": "latitude",
-							"value": "12.9716"
+							"value": "12.9716",
+							"description": "User's latitude (required, between -90 and 90)"
 						},
 						{
 							"key": "longitude",
-							"value": "77.5946"
+							"value": "77.5946",
+							"description": "User's longitude (required, between -180 and 180)"
 						}
 					]
 				},
-				"description": "Get list of schools sorted by proximity to given coordinates"
-			}
+				"description": "Get list of schools sorted by proximity to given coordinates\n\n### Query Parameters\n- latitude: User's latitude (required)\n- longitude: User's longitude (required)\n\n### Success Response (200)\n```json\n{\n    \"success\": true,\n    \"data\": [\n        {\n            \"id\": 1,\n            \"name\": \"Example School\",\n            \"address\": \"123 Education Street\",\n            \"latitude\": 12.9716,\n            \"longitude\": 77.5946,\n            \"distance\": 0.5\n        }\n    ]\n}\n```\n\n### Error Response (400)\n```json\n{\n    \"success\": false,\n    \"message\": \"Validation failed\",\n    \"errors\": [\n        \"Latitude is required\",\n        \"Longitude is required\"\n    ]\n}\n```"
+			},
+			"response": [
+				{
+					"name": "Success Response",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/listSchools?latitude=12.9716&longitude=77.5946",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "listSchools"],
+							"query": [
+								{
+									"key": "latitude",
+									"value": "12.9716"
+								},
+								{
+									"key": "longitude",
+									"value": "77.5946"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"body": "{\n    \"success\": true,\n    \"data\": [\n        {\n            \"id\": 1,\n            \"name\": \"Example School\",\n            \"address\": \"123 Education Street\",\n            \"latitude\": 12.9716,\n            \"longitude\": 77.5946,\n            \"distance\": 0.5\n        }\n    ]\n}"
+				}
+			]
 		}
 	],
 	"variable": [
 		{
 			"key": "baseUrl",
 			"value": "http://localhost:3000",
-			"type": "string"
+			"type": "string",
+			"description": "Base URL for the API. Change this to your deployed URL when testing production."
 		}
 	]
 } 
