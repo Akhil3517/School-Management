@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Management System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .form-section, .list-section {
+            flex: 1;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #1a73e8;
+            margin-bottom: 20px;
+        }
+        form {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 5px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        input:focus {
+            border-color: #1a73e8;
+            outline: none;
+        }
+        input:invalid {
+            border-color: #dc3545;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        button {
+            background: #1a73e8;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            width: 100%;
+        }
+        button:hover {
+            background: #1557b0;
+        }
+        .school-list {
+            margin-top: 20px;
+        }
+        .school-item {
+            background: #ffffff;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+        .school-item:hover {
+            transform: translateY(-2px);
+        }
+        .school-item h3 {
+            color: #1a73e8;
+            margin: 0 0 10px 0;
+        }
+        .school-item p {
+            margin: 5px 0;
+            color: #555;
+        }
+        .distance-badge {
+            background: #e8f0fe;
+            color: #1a73e8;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .loading::after {
+            content: "Loading...";
+            color: #1a73e8;
+        }
+        .no-schools {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-style: italic;
+        }
+        .location-info {
+            background: #e8f0fe;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .location-info p {
+            margin: 5px 0;
+            color: #1a73e8;
+        }
+    </style>
+</head>
+<body>
+    <h1>School Management System</h1>
+    
+    <div class="container">
+        <div class="form-section">
+            <h2>Add New School</h2>
+            <div id="successMessage" class="success-message"></div>
+            <div id="errorMessage" class="error-message"></div>
+            <form id="addSchoolForm">
+                <div class="form-group">
+                    <label for="name">School Name:</label>
+                    <input type="text" id="name" required 
+                           pattern="[A-Za-z0-9\s\-']{2,100}"
+                           title="School name should be between 2 and 100 characters">
+                    <div class="error-message" id="nameError">Please enter a valid school name</div>
+                </div>
+                <div class="form-group">
+                    <label for="address">Address:</label>
+                    <input type="text" id="address" required
+                           pattern="[A-Za-z0-9\s\.,\-']{5,200}"
+                           title="Address should be between 5 and 200 characters">
+                    <div class="error-message" id="addressError">Please enter a valid address</div>
+                </div>
+                <div class="form-group">
+                    <label for="latitude">Latitude:</label>
+                    <input type="number" id="latitude" step="any" required
+                           min="-90" max="90"
+                           title="Latitude must be between -90 and 90">
+                    <div class="error-message" id="latitudeError">Please enter a valid latitude (-90 to 90)</div>
+                </div>
+                <div class="form-group">
+                    <label for="longitude">Longitude:</label>
+                    <input type="number" id="longitude" step="any" required
+                           min="-180" max="180"
+                           title="Longitude must be between -180 and 180">
+                    <div class="error-message" id="longitudeError">Please enter a valid longitude (-180 to 180)</div>
+                </div>
+                <button type="submit">Add School</button>
+            </form>
+        </div>
+
+        <div class="list-section">
+            <h2>Schools List</h2>
+            <div class="location-info">
+                <p>Enter your location to find nearby schools</p>
+            </div>
+            <div class="form-group">
+                <label for="userLatitude">Your Latitude:</label>
+                <input type="number" id="userLatitude" step="any" value="12.9716"
+                       min="-90" max="90"
+                       title="Latitude must be between -90 and 90">
+            </div>
+            <div class="form-group">
+                <label for="userLongitude">Your Longitude:</label>
+                <input type="number" id="userLongitude" step="any" value="77.5946"
+                       min="-180" max="180"
+                       title="Longitude must be between -180 and 180">
+            </div>
+            <button onclick="loadSchools()">Find Nearby Schools</button>
+            <div id="loading" class="loading"></div>
+            <div id="schoolList" class="school-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // Show/hide loading indicator
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Validate form inputs
+        function validateForm() {
+            const name = document.getElementById('name').value;
+            const address = document.getElementById('address').value;
+            const latitude = parseFloat(document.getElementById('latitude').value);
+            const longitude = parseFloat(document.getElementById('longitude').value);
+
+            let isValid = true;
+
+            if (name.length < 2 || name.length > 100) {
+                document.getElementById('nameError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('nameError').style.display = 'none';
+            }
+
+            if (address.length < 5 || address.length > 200) {
+                document.getElementById('addressError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('addressError').style.display = 'none';
+            }
+
+            if (isNaN(latitude) || latitude < -90 || latitude > 90) {
+                document.getElementById('latitudeError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('latitudeError').style.display = 'none';
+            }
+
+            if (isNaN(longitude) || longitude < -180 || longitude > 180) {
+                document.getElementById('longitudeError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('longitudeError').style.display = 'none';
+            }
+
+            return isValid;
+        }
+
+        // Add School
+        document.getElementById('addSchoolForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                showError('Please correct the errors in the form');
+                return;
+            }
+
+            const schoolData = {
+                name: document.getElementById('name').value,
+                address: document.getElementById('address').value,
+                latitude: parseFloat(document.getElementById('latitude').value),
+                longitude: parseFloat(document.getElementById('longitude').value)
+            };
+
+            try {
+                showLoading(true);
+                const response = await fetch('/api/addSchool', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(schoolData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess('School added successfully!');
+                    document.getElementById('addSchoolForm').reset();
+                    loadSchools();
+                } else {
+                    showError(result.message || 'Failed to add school');
+                }
+            } catch (error) {
+                showError('Error: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Load Schools
+        async function loadSchools() {
+            const latitude = document.getElementById('userLatitude').value;
+            const longitude = document.getElementById('userLongitude').value;
+
+            if (isNaN(latitude) || latitude < -90 || latitude > 90 ||
+                isNaN(longitude) || longitude < -180 || longitude > 180) {
+                showError('Please enter valid coordinates');
+                return;
+            }
+
+            try {
+                showLoading(true);
+                const response = await fetch(`/api/listSchools?latitude=${latitude}&longitude=${longitude}`);
+                const result = await response.json();
+                
+                const schoolList = document.getElementById('schoolList');
+                schoolList.innerHTML = '';
+
+                if (result.success && result.data.length > 0) {
+                    result.data.forEach(school => {
+                        const schoolElement = document.createElement('div');
+                        schoolElement.className = 'school-item';
+                        schoolElement.innerHTML = `
+                            <h3>${school.name}</h3>
+                            <p><strong>Address:</strong> ${school.address}</p>
+                            <p><span class="distance-badge">${school.distance.toFixed(2)} km away</span></p>
+                            <p><strong>Location:</strong> ${school.latitude.toFixed(6)}, ${school.longitude.toFixed(6)}</p>
+                        `;
+                        schoolList.appendChild(schoolElement);
+                    });
+                } else {
+                    schoolList.innerHTML = '<div class="no-schools">No schools found in the area</div>';
+                }
+            } catch (error) {
+                showError('Error loading schools: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Load schools when page loads
+        loadSchools();
+    </script>
+</body>
+</html> 
