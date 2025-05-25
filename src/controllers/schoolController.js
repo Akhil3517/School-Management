@@ -94,12 +94,48 @@ const createSchool = async (req, res) => {
   }
 };
 
-// Get all schools
+// Get all schools with proximity sorting
 const getAllSchools = async (req, res) => {
+  const { latitude, longitude } = req.query;
+
   try {
     console.log('Fetching all schools');
     const [schools] = await pool.query('SELECT * FROM schools');
     console.log(`Found ${schools.length} schools`);
+
+    // If latitude and longitude are provided, sort by proximity
+    if (latitude && longitude) {
+      const userLat = parseFloat(latitude);
+      const userLon = parseFloat(longitude);
+
+      // Validate coordinates
+      if (isNaN(userLat) || isNaN(userLon) || 
+          userLat < -90 || userLat > 90 || 
+          userLon < -180 || userLon > 180) {
+        return res.status(400).json({
+          error: 'Invalid coordinates',
+          details: 'Latitude must be between -90 and 90, longitude between -180 and 180'
+        });
+      }
+
+      // Calculate distance for each school and add it to the response
+      const schoolsWithDistance = schools.map(school => ({
+        ...school,
+        distance: calculateDistance(
+          userLat,
+          userLon,
+          school.latitude,
+          school.longitude
+        )
+      }));
+
+      // Sort schools by distance
+      schoolsWithDistance.sort((a, b) => a.distance - b.distance);
+
+      return res.json(schoolsWithDistance);
+    }
+
+    // If no coordinates provided, return unsorted list
     res.json(schools);
   } catch (error) {
     console.error('Error fetching schools:', error);

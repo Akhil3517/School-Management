@@ -3,19 +3,29 @@ require('dotenv').config();
 
 // Debug: Log environment variables (without password)
 console.log('Database Configuration:', {
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
+  host: process.env.MYSQLHOST || process.env.DB_HOST,
+  user: process.env.MYSQLUSERNAME || process.env.DB_USER,
+  database: process.env.MYSQLDATABASE || process.env.DB_NAME,
+  port: process.env.MYSQLPORT || process.env.DB_PORT,
   ssl: process.env.DB_SSL === 'true'
 });
 
+// Validate required environment variables
+const requiredEnvVars = ['MYSQLHOST', 'MYSQLUSERNAME', 'MYSQLPASSWORD', 'MYSQLDATABASE', 'MYSQLPORT'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+  console.error('Missing required environment variables:', missingEnvVars);
+  console.error('Please make sure you have added a MySQL database to your Railway project');
+  process.exit(1);
+}
+
 const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
+  host: process.env.MYSQLHOST || process.env.DB_HOST,
+  user: process.env.MYSQLUSERNAME || process.env.DB_USER,
+  password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
+  database: process.env.MYSQLDATABASE || process.env.DB_NAME,
+  port: process.env.MYSQLPORT || process.env.DB_PORT,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -29,7 +39,7 @@ const testConnection = async (retries = 5, delay = 5000) => {
   for (let i = 0; i < retries; i++) {
     try {
       console.log(`Attempting database connection (attempt ${i + 1}/${retries})...`);
-      console.log('Trying to connect to:', process.env.DB_HOST);
+      console.log('Trying to connect to:', process.env.MYSQLHOST || process.env.DB_HOST);
       
       const connection = await pool.getConnection();
       console.log('Database connected successfully');
@@ -62,22 +72,11 @@ const testConnection = async (retries = 5, delay = 5000) => {
         await new Promise(resolve => setTimeout(resolve, delay));
       } else {
         console.error('Failed to connect to database after all retries');
-        // Log detailed connection information for debugging
-        console.error('Connection details:', {
-          host: process.env.DB_HOST,
-          user: process.env.DB_USER,
-          database: process.env.DB_NAME,
-          port: process.env.DB_PORT,
-          ssl: process.env.DB_SSL === 'true'
-        });
-        
-        // Additional debugging information
         console.error('Please verify:');
-        console.error('1. Database hostname is correct');
-        console.error('2. Database username and password are correct');
-        console.error('3. Database name is correct');
-        console.error('4. Database port is correct');
-        console.error('5. SSL settings are correct');
+        console.error('1. Database is created in Render');
+        console.error('2. Environment variables are set correctly');
+        console.error('3. Database is linked to your service');
+        process.exit(1);
       }
     }
   }
