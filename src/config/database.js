@@ -28,13 +28,17 @@ const pool = mysql.createPool({
   dns: {
     lookup: (hostname, options, callback) => {
       console.log('DNS lookup for:', hostname);
-      require('dns').lookup(hostname, options, (err, address, family) => {
+      // Try to resolve the hostname to IP
+      require('dns').lookup(hostname, { all: true }, (err, addresses) => {
         if (err) {
           console.error('DNS lookup error:', err);
+          callback(err);
         } else {
-          console.log('DNS lookup successful:', { hostname, address, family });
+          // Use the first IP address found
+          const ip = addresses[0].address;
+          console.log('Using IP address:', ip);
+          callback(null, ip, addresses[0].family);
         }
-        callback(err, address, family);
       });
     }
   }
@@ -97,11 +101,11 @@ const testConnection = async (retries = 5, delay = 5000) => {
         // Try to resolve the hostname
         try {
           const dns = require('dns');
-          dns.lookup(process.env.DB_HOST, (err, address, family) => {
+          dns.lookup(process.env.DB_HOST, { all: true }, (err, addresses) => {
             if (err) {
               console.error('DNS lookup failed:', err);
             } else {
-              console.log('DNS lookup successful:', { address, family });
+              console.log('Available IP addresses:', addresses);
             }
           });
         } catch (dnsError) {
