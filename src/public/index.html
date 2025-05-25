@@ -224,15 +224,10 @@
     </div>
 
     <script>
-        // Set your deployed Railway API base URL here
         const API_BASE = 'https://web-production-3814.up.railway.app';
-
-        // Show/hide loading indicator
         function showLoading(show) {
             document.getElementById('loading').style.display = show ? 'block' : 'none';
         }
-
-        // Show success message
         function showSuccess(message) {
             const successDiv = document.getElementById('successMessage');
             successDiv.textContent = message;
@@ -241,8 +236,6 @@
                 successDiv.style.display = 'none';
             }, 3000);
         }
-
-        // Show error message
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
             errorDiv.textContent = message;
@@ -251,63 +244,50 @@
                 errorDiv.style.display = 'none';
             }, 3000);
         }
-
-        // Validate form inputs
         function validateForm() {
             const name = document.getElementById('name').value;
             const address = document.getElementById('address').value;
             const latitude = parseFloat(document.getElementById('latitude').value);
             const longitude = parseFloat(document.getElementById('longitude').value);
-
             let isValid = true;
-
             if (name.length < 2 || name.length > 100) {
                 document.getElementById('nameError').style.display = 'block';
                 isValid = false;
             } else {
                 document.getElementById('nameError').style.display = 'none';
             }
-
             if (address.length < 5 || address.length > 200) {
                 document.getElementById('addressError').style.display = 'block';
                 isValid = false;
             } else {
                 document.getElementById('addressError').style.display = 'none';
             }
-
             if (isNaN(latitude) || latitude < -90 || latitude > 90) {
                 document.getElementById('latitudeError').style.display = 'block';
                 isValid = false;
             } else {
                 document.getElementById('latitudeError').style.display = 'none';
             }
-
             if (isNaN(longitude) || longitude < -180 || longitude > 180) {
                 document.getElementById('longitudeError').style.display = 'block';
                 isValid = false;
             } else {
                 document.getElementById('longitudeError').style.display = 'none';
             }
-
             return isValid;
         }
-
-        // Add School
         document.getElementById('addSchoolForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             if (!validateForm()) {
                 showError('Please correct the errors in the form');
                 return;
             }
-
             const schoolData = {
                 name: document.getElementById('name').value,
                 address: document.getElementById('address').value,
                 latitude: parseFloat(document.getElementById('latitude').value),
                 longitude: parseFloat(document.getElementById('longitude').value)
             };
-
             try {
                 showLoading(true);
                 const response = await fetch(`${API_BASE}/api/addSchool`, {
@@ -317,9 +297,7 @@
                     },
                     body: JSON.stringify(schoolData)
                 });
-
                 const result = await response.json();
-                
                 if (result.success) {
                     showSuccess('School added successfully!');
                     document.getElementById('addSchoolForm').reset();
@@ -333,26 +311,20 @@
                 showLoading(false);
             }
         });
-
-        // Load Schools
         async function loadSchools() {
             const latitude = document.getElementById('userLatitude').value;
             const longitude = document.getElementById('userLongitude').value;
-
             if (isNaN(latitude) || latitude < -90 || latitude > 90 ||
                 isNaN(longitude) || longitude < -180 || longitude > 180) {
                 showError('Please enter valid coordinates');
                 return;
             }
-
             try {
                 showLoading(true);
                 const response = await fetch(`${API_BASE}/api/listSchools?latitude=${latitude}&longitude=${longitude}`);
                 const result = await response.json();
-                
                 const schoolList = document.getElementById('schoolList');
                 schoolList.innerHTML = '';
-
                 if (result.success && result.data.length > 0) {
                     result.data.forEach(school => {
                         const schoolElement = document.createElement('div');
@@ -374,8 +346,6 @@
                 showLoading(false);
             }
         }
-
-        // Load schools when page loads
         loadSchools();
     </script>
 </body>
