@@ -1,27 +1,37 @@
 const express = require('express');
-const { body, query, validationResult } = require('express-validator');
-const schoolController = require('../controllers/schoolController');
-
 const router = express.Router();
+const {
+  createSchool,
+  getAllSchools,
+  getSchoolById,
+  updateSchool,
+  deleteSchool
+} = require('../controllers/schoolController');
 
-// Add School Route
-router.post('/addSchool',
-  [
-    body('name').notEmpty().trim().withMessage('School name is required'),
-    body('address').notEmpty().trim().withMessage('Address is required'),
-    body('latitude').isFloat({ min: -90, max: 90 }).withMessage('Valid latitude is required'),
-    body('longitude').isFloat({ min: -180, max: 180 }).withMessage('Valid longitude is required')
-  ],
-  schoolController.addSchool
-);
+// Log all requests
+router.use((req, res, next) => {
+  console.log(`${req.method} ${req.originalUrl}`);
+  next();
+});
 
-// List Schools Route
-router.get('/listSchools',
-  [
-    query('latitude').isFloat({ min: -90, max: 90 }).withMessage('Valid latitude is required'),
-    query('longitude').isFloat({ min: -180, max: 180 }).withMessage('Valid longitude is required')
-  ],
-  schoolController.listSchools
-);
+// Create a new school
+router.post('/schools', createSchool);
+
+// Get all schools
+router.get('/schools', getAllSchools);
+
+// Get school by ID
+router.get('/schools/:id', getSchoolById);
+
+// Update school
+router.put('/schools/:id', updateSchool);
+
+// Delete school
+router.delete('/schools/:id', deleteSchool);
+
+// Test route
+router.get('/test', (req, res) => {
+  res.json({ message: 'API is working' });
+});
 
 module.exports = router; 

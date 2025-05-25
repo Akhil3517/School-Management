@@ -6,7 +6,6 @@ console.log('Database Configuration:', {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   database: process.env.DB_NAME,
-  // Log if SSL is enabled
   ssl: process.env.DB_SSL === 'true'
 });
 
@@ -18,23 +17,51 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  ssl: {
-    // Required for cloud databases
-    rejectUnauthorized: true
-  },
-  // Add these options for better connection handling
-  connectTimeout: 10000,
-  acquireTimeout: 10000,
-  timeout: 10000,
-  dateStrings: true
+  ssl: process.env.DB_SSL === 'true' ? {
+    rejectUnauthorized: false
+  } : undefined,
+  // Add connection timeout
+  connectTimeout: 60000, // 60 seconds
+  // Add debug mode
+  debug: true,
+  // Add DNS lookup options
+  dns: {
+    lookup: (hostname, options, callback) => {
+      console.log('DNS lookup for:', hostname);
+      require('dns').lookup(hostname, options, (err, address, family) => {
+        if (err) {
+          console.error('DNS lookup error:', err);
+        } else {
+          console.log('DNS lookup successful:', { hostname, address, family });
+        }
+        callback(err, address, family);
+      });
+    }
+  }
 });
 
 // Test the connection with retry logic
 const testConnection = async (retries = 5, delay = 5000) => {
   for (let i = 0; i < retries; i++) {
     try {
+      console.log(`Attempting database connection (attempt ${i + 1}/${retries})...`);
+      console.log('Trying to connect to:', process.env.DB_HOST);
+      
       const connection = await pool.getConnection();
       console.log('Database connected successfully');
+      
+      // Test if we can query the database
+      const [rows] = await connection.query('SELECT 1');
+      console.log('Database query test successful');
+      
+      // Test if we can access the schools table
+      try {
+        const [tables] = await connection.query('SHOW TABLES');
+        console.log('Available tables:', tables);
+      } catch (tableError) {
+        console.error('Error checking tables:', tableError);
+      }
+      
       connection.release();
       return;
     } catch (err) {
@@ -58,6 +85,28 @@ const testConnection = async (retries = 5, delay = 5000) => {
           database: process.env.DB_NAME,
           ssl: process.env.DB_SSL === 'true'
         });
+        
+        // Additional debugging information
+        console.error('Please verify:');
+        console.error('1. Database hostname is correct');
+        console.error('2. Database username and password are correct');
+        console.error('3. Database name is correct');
+        console.error('4. Your IP is allowed in database access settings');
+        console.error('5. Database server is running and accessible');
+        
+        // Try to resolve the hostname
+        try {
+          const dns = require('dns');
+          dns.lookup(process.env.DB_HOST, (err, address, family) => {
+            if (err) {
+              console.error('DNS lookup failed:', err);
+            } else {
+              console.log('DNS lookup successful:', { address, family });
+            }
+          });
+        } catch (dnsError) {
+          console.error('DNS lookup error:', dnsError);
+        }
       }
     }
   }

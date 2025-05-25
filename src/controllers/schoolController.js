@@ -32,107 +32,158 @@ const formatValidationErrors = (errors) => {
   });
 };
 
-exports.addSchool = async (req, res) => {
+// Create a new school
+const createSchool = async (req, res) => {
+  const { name, address, latitude, longitude } = req.body;
+
+  // Input validation
+  if (!name || !address || latitude === undefined || longitude === undefined) {
+    return res.status(400).json({
+      error: 'Missing required fields',
+      details: {
+        name: !name ? 'Name is required' : null,
+        address: !address ? 'Address is required' : null,
+        latitude: latitude === undefined ? 'Latitude is required' : null,
+        longitude: longitude === undefined ? 'Longitude is required' : null
+      }
+    });
+  }
+
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Please correct the following errors:',
-        errors: formatValidationErrors(errors.array())
-      });
-    }
+    // Log the incoming request
+    console.log('Creating school:', { name, address, latitude, longitude });
 
-    const { name, address, latitude, longitude } = req.body;
-    
-    // Check if school with same name already exists
-    const [existingSchools] = await pool.execute(
-      'SELECT id FROM schools WHERE name = ?',
-      [name]
-    );
-
-    if (existingSchools.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'A school with this name already exists'
-      });
-    }
-    
-    const [result] = await pool.execute(
+    const [result] = await pool.query(
       'INSERT INTO schools (name, address, latitude, longitude) VALUES (?, ?, ?, ?)',
       [name, address, latitude, longitude]
     );
 
+    console.log('School created successfully:', result);
+
     res.status(201).json({
-      success: true,
-      message: 'School added successfully',
-      data: {
-        id: result.insertId,
-        name,
-        address,
-        latitude,
-        longitude
-      }
+      message: 'School created successfully',
+      schoolId: result.insertId
     });
   } catch (error) {
-    console.error('Error adding school:', error);
+    console.error('Error creating school:', {
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      sqlState: error.sqlState,
+      sqlMessage: error.sqlMessage
+    });
+
+    // Handle specific database errors
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({
+        error: 'School with this name already exists'
+      });
+    }
+
+    if (error.code === 'ER_NO_SUCH_TABLE') {
+      return res.status(500).json({
+        error: 'Database table does not exist',
+        details: 'Please contact the administrator'
+      });
+    }
+
     res.status(500).json({
-      success: false,
-      message: 'Unable to add school. Please try again later.',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: 'Failed to create school',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 };
 
-exports.listSchools = async (req, res) => {
+// Get all schools
+const getAllSchools = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Please provide valid coordinates',
-        errors: formatValidationErrors(errors.array())
-      });
-    }
-
-    const { latitude, longitude } = req.query;
-    const userLat = parseFloat(latitude);
-    const userLon = parseFloat(longitude);
-
-    const [schools] = await pool.execute('SELECT * FROM schools');
-
-    if (schools.length === 0) {
-      return res.json({
-        success: true,
-        message: 'No schools found in the database',
-        data: []
-      });
-    }
-
-    // Calculate distance and sort schools
-    const schoolsWithDistance = schools.map(school => ({
-      ...school,
-      distance: calculateDistance(
-        userLat,
-        userLon,
-        school.latitude,
-        school.longitude
-      )
-    }));
-
-    schoolsWithDistance.sort((a, b) => a.distance - b.distance);
-
-    res.json({
-      success: true,
-      message: `Found ${schoolsWithDistance.length} schools`,
-      data: schoolsWithDistance
-    });
+    console.log('Fetching all schools');
+    const [schools] = await pool.query('SELECT * FROM schools');
+    console.log(`Found ${schools.length} schools`);
+    res.json(schools);
   } catch (error) {
-    console.error('Error listing schools:', error);
+    console.error('Error fetching schools:', error);
     res.status(500).json({
-      success: false,
-      message: 'Unable to fetch schools. Please try again later.',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: 'Failed to fetch schools',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
+};
+
+// Get school by ID
+const getSchoolById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    console.log(`Fetching school with ID: ${id}`);
+    const [schools] = await pool.query('SELECT * FROM schools WHERE id = ?', [id]);
+
+    if (schools.length === 0) {
+      return res.status(404).json({ error: 'School not found' });
+    }
+
+    res.json(schools[0]);
+  } catch (error) {
+    console.error(`Error fetching school ${id}:`, error);
+    res.status(500).json({
+      error: 'Failed to fetch school',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+// Update school
+const updateSchool = async (req, res) => {
+  const { id } = req.params;
+  const { name, address, latitude, longitude } = req.body;
+
+  try {
+    console.log(`Updating school ${id}:`, { name, address, latitude, longitude });
+    const [result] = await pool.query(
+      'UPDATE schools SET name = ?, address = ?, latitude = ?, longitude = ? WHERE id = ?',
+      [name, address, latitude, longitude, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'School not found' });
+    }
+
+    res.json({ message: 'School updated successfully' });
+  } catch (error) {
+    console.error(`Error updating school ${id}:`, error);
+    res.status(500).json({
+      error: 'Failed to update school',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+// Delete school
+const deleteSchool = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    console.log(`Deleting school ${id}`);
+    const [result] = await pool.query('DELETE FROM schools WHERE id = ?', [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'School not found' });
+    }
+
+    res.json({ message: 'School deleted successfully' });
+  } catch (error) {
+    console.error(`Error deleting school ${id}:`, error);
+    res.status(500).json({
+      error: 'Failed to delete school',
+      details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+    });
+  }
+};
+
+module.exports = {
+  createSchool,
+  getAllSchools,
+  getSchoolById,
+  updateSchool,
+  deleteSchool
 }; 
