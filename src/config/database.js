@@ -1,10 +1,7 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
-
-// Support both MYSQLUSER and MYSQLUSERNAME
 const user = process.env.MYSQLUSER || process.env.MYSQLUSERNAME || process.env.DB_USER;
 
-// Debug: Log environment variables (without password)
 console.log('Database Configuration:', {
   host: process.env.MYSQLHOST || process.env.DB_HOST,
   user: user,
@@ -13,7 +10,6 @@ console.log('Database Configuration:', {
   ssl: process.env.DB_SSL === 'true'
 });
 
-// Updated required environment variable check
 const requiredEnvVars = ['MYSQLHOST', 'MYSQLPASSWORD', 'MYSQLDATABASE', 'MYSQLPORT'];
 const hasUser = process.env.MYSQLUSER || process.env.MYSQLUSERNAME;
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
@@ -38,8 +34,6 @@ const pool = mysql.createPool({
     rejectUnauthorized: false
   } : undefined
 });
-
-// Test the connection with retry logic
 const testConnection = async (retries = 5, delay = 5000) => {
   for (let i = 0; i < retries; i++) {
     try {
@@ -48,12 +42,8 @@ const testConnection = async (retries = 5, delay = 5000) => {
       
       const connection = await pool.getConnection();
       console.log('Database connected successfully');
-      
-      // Test if we can query the database
       const [rows] = await connection.query('SELECT 1');
       console.log('Database query test successful');
-      
-      // Test if we can access the schools table
       try {
         const [tables] = await connection.query('SHOW TABLES');
         console.log('Available tables:', tables);
@@ -86,8 +76,6 @@ const testConnection = async (retries = 5, delay = 5000) => {
     }
   }
 };
-
-// Test connection on startup
 testConnection();
 
 module.exports = pool; 

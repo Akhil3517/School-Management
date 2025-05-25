@@ -1,7 +1,5 @@
 const { validationResult } = require('express-validator');
 const pool = require('../config/database');
-
-// Calculate distance between two points using Haversine formula
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const R = 6371; // Earth's radius in kilometers
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -13,8 +11,6 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
 };
-
-// Format validation errors into user-friendly messages
 const formatValidationErrors = (errors) => {
   return errors.map(error => {
     switch(error.param) {
@@ -31,12 +27,8 @@ const formatValidationErrors = (errors) => {
     }
   });
 };
-
-// Create a new school
 const createSchool = async (req, res) => {
   const { name, address, latitude, longitude } = req.body;
-
-  // Input validation
   if (!name || !address || latitude === undefined || longitude === undefined) {
     return res.status(400).json({
       error: 'Missing required fields',
@@ -50,7 +42,6 @@ const createSchool = async (req, res) => {
   }
 
   try {
-    // Log the incoming request
     console.log('Creating school:', { name, address, latitude, longitude });
 
     const [result] = await pool.query(
@@ -72,8 +63,6 @@ const createSchool = async (req, res) => {
       sqlState: error.sqlState,
       sqlMessage: error.sqlMessage
     });
-
-    // Handle specific database errors
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({
         error: 'School with this name already exists'
@@ -93,8 +82,6 @@ const createSchool = async (req, res) => {
     });
   }
 };
-
-// Get all schools with proximity sorting
 const getAllSchools = async (req, res) => {
   const { latitude, longitude } = req.query;
   try {
@@ -125,8 +112,6 @@ const getAllSchools = async (req, res) => {
     });
   }
 };
-
-// Get school by ID
 const getSchoolById = async (req, res) => {
   const { id } = req.params;
 
@@ -147,8 +132,6 @@ const getSchoolById = async (req, res) => {
     });
   }
 };
-
-// Update school
 const updateSchool = async (req, res) => {
   const { id } = req.params;
   const { name, address, latitude, longitude } = req.body;
@@ -173,8 +156,6 @@ const updateSchool = async (req, res) => {
     });
   }
 };
-
-// Delete school
 const deleteSchool = async (req, res) => {
   const { id } = req.params;
 
