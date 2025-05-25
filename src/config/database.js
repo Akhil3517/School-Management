@@ -6,6 +6,7 @@ console.log('Database Configuration:', {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
   ssl: process.env.DB_SSL === 'true'
 });
 
@@ -14,34 +15,13 @@ const pool = mysql.createPool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
   ssl: process.env.DB_SSL === 'true' ? {
     rejectUnauthorized: false
-  } : undefined,
-  // Add connection timeout
-  connectTimeout: 60000, // 60 seconds
-  // Add debug mode
-  debug: true,
-  // Add DNS lookup options
-  dns: {
-    lookup: (hostname, options, callback) => {
-      console.log('DNS lookup for:', hostname);
-      // Try to resolve the hostname to IP
-      require('dns').lookup(hostname, { all: true }, (err, addresses) => {
-        if (err) {
-          console.error('DNS lookup error:', err);
-          callback(err);
-        } else {
-          // Use the first IP address found
-          const ip = addresses[0].address;
-          console.log('Using IP address:', ip);
-          callback(null, ip, addresses[0].family);
-        }
-      });
-    }
-  }
+  } : undefined
 });
 
 // Test the connection with retry logic
@@ -87,6 +67,7 @@ const testConnection = async (retries = 5, delay = 5000) => {
           host: process.env.DB_HOST,
           user: process.env.DB_USER,
           database: process.env.DB_NAME,
+          port: process.env.DB_PORT,
           ssl: process.env.DB_SSL === 'true'
         });
         
@@ -95,22 +76,8 @@ const testConnection = async (retries = 5, delay = 5000) => {
         console.error('1. Database hostname is correct');
         console.error('2. Database username and password are correct');
         console.error('3. Database name is correct');
-        console.error('4. Your IP is allowed in database access settings');
-        console.error('5. Database server is running and accessible');
-        
-        // Try to resolve the hostname
-        try {
-          const dns = require('dns');
-          dns.lookup(process.env.DB_HOST, { all: true }, (err, addresses) => {
-            if (err) {
-              console.error('DNS lookup failed:', err);
-            } else {
-              console.log('Available IP addresses:', addresses);
-            }
-          });
-        } catch (dnsError) {
-          console.error('DNS lookup error:', dnsError);
-        }
+        console.error('4. Database port is correct');
+        console.error('5. SSL settings are correct');
       }
     }
   }
