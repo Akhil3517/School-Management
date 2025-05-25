@@ -13,9 +13,11 @@ console.log('Database Configuration:', {
   ssl: process.env.DB_SSL === 'true'
 });
 
-// Validate required environment variables
-const requiredEnvVars = ['MYSQLHOST', 'MYSQLUSERNAME', 'MYSQLPASSWORD', 'MYSQLDATABASE', 'MYSQLPORT'];
+// Updated required environment variable check
+const requiredEnvVars = ['MYSQLHOST', 'MYSQLPASSWORD', 'MYSQLDATABASE', 'MYSQLPORT'];
+const hasUser = process.env.MYSQLUSER || process.env.MYSQLUSERNAME;
 const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+if (!hasUser) missingEnvVars.push('MYSQLUSER or MYSQLUSERNAME');
 
 if (missingEnvVars.length > 0) {
   console.error('Missing required environment variables:', missingEnvVars);
