@@ -1,10 +1,13 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
+// Support both MYSQLUSER and MYSQLUSERNAME
+const user = process.env.MYSQLUSER || process.env.MYSQLUSERNAME || process.env.DB_USER;
+
 // Debug: Log environment variables (without password)
 console.log('Database Configuration:', {
   host: process.env.MYSQLHOST || process.env.DB_HOST,
-  user: process.env.MYSQLUSERNAME || process.env.DB_USER,
+  user: user,
   database: process.env.MYSQLDATABASE || process.env.DB_NAME,
   port: process.env.MYSQLPORT || process.env.DB_PORT,
   ssl: process.env.DB_SSL === 'true'
@@ -22,7 +25,7 @@ if (missingEnvVars.length > 0) {
 
 const pool = mysql.createPool({
   host: process.env.MYSQLHOST || process.env.DB_HOST,
-  user: process.env.MYSQLUSERNAME || process.env.DB_USER,
+  user: user,
   password: process.env.MYSQLPASSWORD || process.env.DB_PASSWORD,
   database: process.env.MYSQLDATABASE || process.env.DB_NAME,
   port: process.env.MYSQLPORT || process.env.DB_PORT,
